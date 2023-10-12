@@ -26,6 +26,8 @@ namespace MatchGame2
         DispatcherTimer timer = new DispatcherTimer();
         int tenthsOfSecondsElapsed;
         int matchesFound;
+        float bestTime = 9999;
+        bool DeathTimerActive = false;
 
         public MainWindow()
         {
@@ -38,17 +40,63 @@ namespace MatchGame2
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
-            tenthsOfSecondsElapsed++;
-            timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
-            if (matchesFound == 8)
+            if (DeathTimerActive == true)
             {
-                timer.Stop();
-                timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+                tenthsOfSecondsElapsed--;
+                timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
+                if (matchesFound == 8)
+                {
+                    timer.Stop();
+                    float timertodouble = (tenthsOfSecondsElapsed / 10F);
+                    if (timertodouble < bestTime)
+                    {
+                        bestTime = bestTime - (tenthsOfSecondsElapsed / 10F);
+                        BestTimeTextBox.Text = "Best: " + bestTime.ToString("0.0s");
+                        MessageBox.Show($"Wow! You Survived and shaved {timertodouble.ToString("0.0s")} off your Best!", "Notice: You did it!", MessageBoxButton.OK);
+                    }
+                    timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+                }
+                if (tenthsOfSecondsElapsed == 0)
+                {
+                    timer.Stop();
+                    MessageBox.Show("The Timer Ran Out!", "Uh Oh", MessageBoxButton.OK, MessageBoxImage.Stop);
+                    SetUpGame();
+                }
+            }
+            if (DeathTimerActive == false)
+            {
+                tenthsOfSecondsElapsed++;
+                timeTextBlock.Text = (tenthsOfSecondsElapsed / 10F).ToString("0.0s");
+                if (matchesFound == 8)
+                {
+                    timer.Stop();
+                    if ((tenthsOfSecondsElapsed / 10F) < bestTime)
+                    {
+                        bestTime = (tenthsOfSecondsElapsed / 10F);
+                        BestTimeTextBox.Text = "Best: " + bestTime.ToString("0.0s");
+                        MessageBox.Show("Congratulations! You got a new best score!", "Notice: New Best", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBoxResult deathtimercheck = MessageBox.Show("Do you want to enable the Death Timer?", "Notice: Death Timer", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        if (deathtimercheck == MessageBoxResult.Yes)
+                        {
+                            DeathTimerActive = true;
+                            SetUpGame();
+                        }
+                    }
+                    timeTextBlock.Text = timeTextBlock.Text + " - Play again?";
+                }
             }
         }
 
         private void SetUpGame()
         {
+            Random random = new Random();
+
+            List<string> o = new List<string>()
+            {
+
+                "о", "ȯ", "ọ", "ỏ", "ơ", "ó", "ò", "ö",
+                "о", "ȯ", "ọ", "ỏ", "ơ", "ó", "ò", "ö",
+            };
             List<string> animalEmoji = new List<string>()
             {
                 "🐿", "🐿",
@@ -60,12 +108,23 @@ namespace MatchGame2
                 "🦉", "🦉",
                 "🐥", "🐥",
             };
-
-            Random random = new Random();
+            List<string> EasyList = new List<string>()
+            {
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+                "𒐫", "𒐫",
+            };
+            List<string> THELIST = new List<string>();
+            string[] lists = new string[3] {"o", "animalEmoji", "EasyList"};
 
             foreach (TextBlock textBlock in mainGrid.Children.OfType<TextBlock>())
             {
-                if (textBlock.Name != "timeTextBlock")
+                if (textBlock.Name != "timeTextBlock" && textBlock.Name != "BestTimeTextBox")
                 {
                     textBlock.Visibility = Visibility.Visible;
                     int index = random.Next(animalEmoji.Count);
@@ -76,8 +135,16 @@ namespace MatchGame2
             }
 
             timer.Start();
-            tenthsOfSecondsElapsed = 0;
+            if (DeathTimerActive == true)
+            {
+                tenthsOfSecondsElapsed = Convert.ToInt32(bestTime * 10F);
+            }
+            if (DeathTimerActive == false)
+            {
+                tenthsOfSecondsElapsed = 0;
+            }
             matchesFound = 0;
+
         }
 
         TextBlock lastTextBlockClicked;
